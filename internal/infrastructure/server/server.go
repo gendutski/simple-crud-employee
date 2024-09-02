@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"simple-crud-employee/configs"
+	"simple-crud-employee/internal/entity"
 	handler "simple-crud-employee/internal/interface/http"
 	"simple-crud-employee/internal/interface/repository"
 	"simple-crud-employee/internal/usecase"
@@ -27,6 +28,9 @@ func InitServer() *Server {
 
 	// get database config
 	db := configs.InitDatabaseConfig().ConnectDB()
+
+	// auto migrate database
+	db.AutoMigrate(&entity.Employee{})
 
 	// set repo
 	employeeRepo := repository.InitEmployeeRepository(db)

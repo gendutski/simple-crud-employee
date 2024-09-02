@@ -3,7 +3,9 @@ package usecase
 import (
 	"errors"
 	"net/http"
+	"reflect"
 	"simple-crud-employee/internal/entity"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
@@ -29,9 +31,21 @@ type EmployeeRepo interface {
 }
 
 func InitEmployeeUsecase(repo EmployeeRepo) *EmployeeUsecase {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	// get field json value
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+
+		if name == "-" {
+			return ""
+		}
+
+		return name
+	})
+
 	return &EmployeeUsecase{
 		repo:     repo,
-		validate: validator.New(validator.WithRequiredStructEnabled()),
+		validate: validate,
 	}
 }
 
@@ -44,10 +58,7 @@ func (uc *EmployeeUsecase) Create(payload *entity.Employee) error {
 	// validate payload
 	err := uc.validate.Struct(payload)
 	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: err,
-		}
+		return uc.handleValidatorError(err)
 	}
 
 	// create employee
@@ -71,6 +82,12 @@ func (uc *EmployeeUsecase) Create(payload *entity.Employee) error {
 }
 
 func (uc *EmployeeUsecase) Update(employeeID string, payload entity.Employee) error {
+	// validate payload
+	err := uc.validate.Struct(payload)
+	if err != nil {
+		return uc.handleValidatorError(err)
+	}
+
 	// get employee detail
 	employee, err := uc.repo.GetDetail(employeeID)
 	if err != nil {
@@ -124,4 +141,21 @@ func (uc *EmployeeUsecase) Delete(employeeID string) error {
 
 func (uc *EmployeeUsecase) Get(req *entity.QueryRequest) (*entity.EmployeeListResponse, error) {
 	return uc.repo.GetList(req)
+}
+
+func (uc *EmployeeUsecase) handleValidatorError(err error) error {
+	messages := map[string][]*entity.ValidatorMessage{}
+	if vErr, ok := err.(validator.ValidationErrors); ok {
+		for _, v := range vErr {
+			messages[v.Field()] = append(messages[v.Field()], &entity.ValidatorMessage{
+				Tag:   v.Tag(),
+				Param: v.Param(),
+			})
+		}
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: messages,
+		}
+	}
+	return err
 }

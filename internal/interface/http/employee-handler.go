@@ -43,7 +43,7 @@ func (h *EmployeeHandler) Create(e echo.Context) error {
 
 func (h *EmployeeHandler) Update(e echo.Context) error {
 	// get param
-	employeID := e.Param("employeID")
+	employeID := e.Param("employeeID")
 	if employeID == "" {
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,
@@ -71,7 +71,7 @@ func (h *EmployeeHandler) Update(e echo.Context) error {
 
 func (h *EmployeeHandler) Delete(e echo.Context) error {
 	// get param
-	employeID := e.Param("employeID")
+	employeID := e.Param("employeeID")
 	if employeID == "" {
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,

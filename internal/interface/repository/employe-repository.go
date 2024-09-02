@@ -53,6 +53,16 @@ func (r *EmployeeRepository) GetList(req *entity.QueryRequest) (*entity.Employee
 		return nil, err
 	}
 
+	// validate pagination
+	if req.Page == 0 {
+		req.Page = 1
+	}
+	if req.PageSize < 10 {
+		req.PageSize = 10
+	} else if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+
 	// get total pages
 	pages := math.Ceil(float64(total) / float64(req.PageSize))
 
@@ -60,7 +70,7 @@ func (r *EmployeeRepository) GetList(req *entity.QueryRequest) (*entity.Employee
 	offset := (req.Page - 1) * req.PageSize
 
 	// get employee list
-	err = qry.Offset(offset).Limit(req.PageSize).Find(employees).Error
+	err = qry.Offset(offset).Limit(req.PageSize).Find(&employees).Error
 	if err != nil {
 		return nil, err
 	}

@@ -23,5 +23,5 @@ func SetupRoutes(server *Server) {
 	server.Router.DELETE("/delete/:employeeID", server.EmployeeHandler.Delete)
 
 	// get employee list
-	server.Router.GET("/list", server.EmployeeHandler.Create)
+	server.Router.GET("/list", server.EmployeeHandler.Get)
 }
