@@ -68,7 +68,7 @@ func (r *EmployeeRepository) Get(req *entity.QueryRequest) (*entity.EmployeeList
 		Employees: employees,
 		Pages:     int(pages),
 		Page:      req.Page,
-		Limit:     req.PageSize,
+		PageSize:  req.PageSize,
 	}, nil
 }
 
