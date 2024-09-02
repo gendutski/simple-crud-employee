@@ -17,7 +17,7 @@ type Server struct {
 }
 
 // run http server
-func (s *Server) Run(addr string) {
+func (s *Server) Run() {
 	s.Router.Logger.Fatal(s.Router.Start(fmt.Sprintf(":%d", s.config.Port)))
 }
 
