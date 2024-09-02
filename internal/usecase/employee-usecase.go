@@ -3,10 +3,16 @@ package usecase
 import "simple-crud-employee/internal/entity"
 
 type EmployeeRepo interface {
+	// insert data into employee table
 	Create(payload *entity.Employee) error
-	Update(employeeID string, payload *entity.Employee) error
+	// update existing employee data
+	Update(payload entity.Employee, data *entity.Employee) error
+	// delete existing data
 	Delete(employeeID string) error
-	Get(employeeID, fullName, address string) ([]*entity.Employee, error)
+	// get query list of employees
+	GetList(employeeID, fullName, address string) (*entity.EmployeeListResponse, error)
+	// get single employee by employeeID
+	GetDetail(employeeID string) (*entity.Employee, error)
 }
 
 func InitEmployeeUsecase(repo EmployeeRepo) *EmployeeUsecase {
