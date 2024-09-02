@@ -29,3 +29,24 @@ Create Simple CRUD Employee
     4. Validation untuk valid data (null handling, date handling, duplicate data handling)
     5. Error handling ( exception )
 3. Buatlah guide/dokumentasi untuk menjalankan program tersebut
+
+## Layout
+Project Layout ini menggunakan `Standar Project Layout` dibangun oleh [komunitas](https://github.com/golang-standards/project-layout)
+
+Berikut detail dari project layout:
+```
+simple-crud-employee/
+|-- cmd/
+|   |-- app/            # Main entry point 
+|-- internal/
+|   |-- entity/         # Business entities
+|   |-- infrastructure/ # Frameworks and drivers
+|   |  |-- db/          # Database implementation
+|   |  |-- server/      # HTTP server implementation
+|   |-- interface/      # Adapters for the external world
+|   |  |-- http/        # HTTP handlers (controllers)
+|   |  |-- repository/  # Database repositories
+|   |-- usecase/        # Application business rules
+|-- web
+    |-- template        # Server side template (view)
+```
