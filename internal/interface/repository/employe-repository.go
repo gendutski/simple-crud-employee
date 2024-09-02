@@ -27,12 +27,12 @@ func (r *EmployeeRepository) Update(payload entity.Employee, data *entity.Employ
 }
 
 // delete existing data
-func (r *EmployeeRepository) Delete(data *entity.Employee) error {
-	return r.db.Delete(data).Error
+func (r *EmployeeRepository) Delete(employee *entity.Employee) error {
+	return r.db.Delete(employee).Error
 }
 
 // get query list of employees
-func (r *EmployeeRepository) Get(req *entity.QueryRequest) (*entity.EmployeeListResponse, error) {
+func (r *EmployeeRepository) GetList(req *entity.QueryRequest) (*entity.EmployeeListResponse, error) {
 	var employees []*entity.Employee
 	var total int64
 
