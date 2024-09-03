@@ -18,7 +18,7 @@ type EmployeeRepository struct {
 
 // insert data into employee table
 func (r *EmployeeRepository) Create(payload *entity.Employee) error {
-	return r.db.Save(payload).Error
+	return r.db.Create(payload).Error
 }
 
 // update existing employee data

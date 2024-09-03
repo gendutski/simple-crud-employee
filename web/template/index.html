@@ -1,3 +1,307 @@
 {{define "index"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Data</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Employee Data</h2>
+            <button id="addEmployeeBtn" class="btn btn-primary">Add Employee</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-3">
+            <form method="GET" id="searchForm" action="/list">
+                <input type="hidden" name="page" value="1" />
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" name="employeeID" class="form-control" placeholder="Search employee id...">
+                    </div>
+
+                    <div class="col-md-3">
+                        <input type="text" name="fullName" class="form-control" placeholder="Search full name...">
+                    </div>
+
+                    <div class="col-md-3">
+                        <input type="text" name="address" class="form-control" placeholder="Search address...">
+                    </div>
+
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="reset" class="btn btn-warning">Reset</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="15%">Employee ID</th>
+                    <th width="30%">Full Name</th>
+                    <th width="35%">Address</th>
+                    <th width="15%">Action</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+                <!-- Employee rows will be appended here dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav>
+            <ul id="pagination" class="pagination justify-content-center">
+                <!-- Pagination items will be generated here dynamically -->
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Modal for Adding/Editing Employee -->
+    <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="employeeModalLabel">Add Employee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="employeeForm" method="POST" action="/create">
+                        <div class="mb-3">
+                            <label for="employeeID" class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" id="employeeID" name="employeeID" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" name="fullName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="address" name="address" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (with Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        let editingIndex = null;
+
+        function loadResponseError(jqXHR) {
+            let response = JSON.parse(jqXHR.responseText)
+
+            // get message from errors 
+            if (response.message) {
+                if (typeof response.message === 'object' && !Array.isArray(response.message)) {
+                    // validation error
+                    for (let key in response.message) {
+                        for (let idx in response.message[key]) {
+                            if (response.message[key][idx].tag === "required") {
+                                toastFail(response.code, response.status, key + " is required");
+                            } else if (response.message[key][idx].tag === "max") {
+                                toastFail(response.code, response.status, "maximum characters in " + key + " is " + response.message[key].param);
+                            } else {
+                                toastFail(response.code, response.status, key + " validation error");
+                            }
+                        }
+                    }
+                } else {
+                    toastFail(response.code, response.status, response.message);
+                }
+            }
+        }
+
+        function toastSuccess(message) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "#4fbe87",
+                }
+            }).showToast();
+        }
+
+        function toastFail(code, status, message) {
+            Toastify({
+                text: code + ' - ' + status + '\n' + message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "#ff0000"
+                }
+            }).showToast();
+        }
+
+        function renderTable(page) {
+            // valdiate page
+            $('#searchForm input[name="page"]').val(page || 1);
+
+            let method = $('#searchForm').attr('method');
+            let action = $('#searchForm').attr('action');
+            let data = $('#searchForm').serialize();
+
+            $.ajax({
+                type: method,
+                url: action,
+                cache: false,
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader('Accept', '*/*');
+                },
+                data: data,
+                dataType: "json"
+            }).done(function (response) {
+                const employeeTableBody = $('#employeeTableBody');
+                employeeTableBody.empty();
+
+                if (response.data.length == 0) {
+                    employeeTableBody(`<tr>
+                        <td colspan="4">No employee found</td>
+                    </tr>`);
+                } else {
+                    let start = (response.page - 1) * response.pageSize
+
+                    response.data.forEach((employee, index) => {
+                        num = index + start + 1
+                        employeeTableBody.append(`
+                            <tr>
+                                <td>${num}</td>
+                                <td data-table="employeeID" data-tableid="${employee.employeeID}">${employee.employeeID}</td>
+                                <td data-table="fullName" data-tableid="${employee.employeeID}">${employee.fullName}</td>
+                                <td data-table="address" data-tableid="${employee.employeeID}">${employee.address}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning editBtn" data-id="${employee.employeeID}">Edit</button>
+                                    <button class="btn btn-sm btn-danger deleteBtn" data-id="${employee.employeeID}">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+
+                    renderPagination(response.pages, response.page)
+                }
+            }).fail(function (jqXHR) {
+                loadResponseError(jqXHR);
+            });
+        }
+
+        function renderPagination(pages, page) {
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            if (pages > 1) {
+                for (let i = 1; i <= pages; i++) {
+                    pagination.append(`
+                        <li class="page-item ${i === page ? 'active' : ''}">
+                            <a href="#" class="page-link" data-page="${i}" onclick="return gotoPage(${i})">${i}</a>
+                        </li>
+                    `);
+                }
+            }
+        }
+
+        function gotoPage(page) {
+            renderTable(page);
+            return false;
+        }
+
+        $('#addEmployeeBtn').on('click', function () {
+            $('#employeeModalLabel').text('Add Employee');
+            $('#employeeForm').attr({
+                action: '/create',
+                method: 'POST'
+            });
+            $('#employeeForm').trigger('reset');
+            $('#employeeModal').modal('show');
+        });
+
+        $('#employeeTableBody').on('click', '.editBtn', function () {
+            let id = $(this).attr('data-id');
+            $('#employeeModalLabel').text('Edit Employee');
+            $('#employeeForm').attr({
+                action: '/update/' + id,
+                method: "PUT"
+            });
+
+            // fill data
+            $(`td[data-tableid="${id}"]`).each(function () {
+                $('#' + $(this).attr('data-table')).val($(this).html());
+            });
+            $('#employeeModal').modal('show');
+        });
+
+        $('#employeeTableBody').on('click', '.deleteBtn', function () {
+            let id = $(this).attr('data-id');
+
+            if (confirm(`Delete employee ${id}?`)) {
+                $.ajax({
+                    type: "DELETE",
+                    url: `/delete/${id}`,
+                    cache: false,
+                    beforeSend: function (xhr, settings) {
+                        xhr.setRequestHeader('Accept', '*/*');
+                    },
+                    dataType: "json"
+                }).done(function (response) {
+                    renderTable();
+                }).fail(function (jqXHR) {
+                    loadResponseError(jqXHR);
+                });
+            }
+        });
+
+        $('#employeeForm').on('submit', function (event) {
+            event.preventDefault();
+            let method = $(this).attr('method');
+            let action = $(this).attr('action');
+            let data = $(this).serialize();
+
+            $.ajax({
+                type: method,
+                url: action,
+                data: data,
+                cache: false,
+                beforeSend: function (xhr, settings) {
+                    $('#employeeModal').modal('hide');
+                    xhr.setRequestHeader('Accept', '*/*');
+                },
+                dataType: "json"
+            }).done(function (response) {
+                renderTable();
+            }).fail(function (jqXHR) {
+                loadResponseError(jqXHR);
+            });
+        });
+
+        $('#searchForm').on('submit', function (event) {
+            event.preventDefault();
+            renderTable();
+        });
+
+        // Initial render
+        renderTable();
+    </script>
+</body>
+
+</html>
 
 {{end}}
