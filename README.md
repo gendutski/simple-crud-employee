@@ -68,7 +68,8 @@ simple-crud-employee/
     MYSQL_MAX_OPEN_CONNECTION="50"
     MYSQL_MAX_IDLE_CONNECTION="10"
     ```
-2. Di project root folder, jalankan di terminal:
+2. Buat database sesuai env `MYSQL_DB_NAME` jika database belum tersedia
+3. Di project root folder, jalankan di terminal:
     ```bash
     go run cmd/app/main.go 
     ```
