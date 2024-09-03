@@ -50,3 +50,25 @@ simple-crud-employee/
 |-- web
     |-- template        # Server side template (view)
 ```
+
+## How to run
+1. Set environment sesuai [configs](configs/), atau buat sebuah `.env` file. Contoh:
+    ```bash
+    HTTP_PORT="8080"
+    MYSQL_HOST="localhost"
+    MYSQL_PORT="3306"
+    MYSQL_DB_NAME="employee_db"
+    MYSQL_USERNAME="root"
+    MYSQL_PASSWORD="password"
+    MYSQL_LOG_MODE="1"
+    MYSQL_PARSE_TIME="true"
+    MYSQL_CHARSET="utf8mb4"
+    MYSQL_LOC="Local"
+    MYSQL_MAX_LIFETIME_CONNECTION="10"
+    MYSQL_MAX_OPEN_CONNECTION="50"
+    MYSQL_MAX_IDLE_CONNECTION="10"
+    ```
+2. Di project root folder, jalankan di terminal:
+    ```bash
+    go run cmd/app/main.go 
+    ```
